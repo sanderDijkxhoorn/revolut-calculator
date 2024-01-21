@@ -1,0 +1,52 @@
+{
+    "standard": {
+        "name": "Standard",
+        "monthlyFee": 0,
+        "yearlyFee": 0,
+        "yearlyAPY": {
+            "EUR": 0,
+            "GBP": 0,
+            "USD": 0
+        }
+    },
+    "plus": {
+        "name": "Plus",
+        "monthlyFee": 2.99,
+        "yearlyFee": 30,
+        "yearlyAPY": {
+            "EUR": 3.61,
+            "GBP": 4.81,
+            "USD": 4.69
+        }
+    },
+    "premium": {
+        "name": "Premium",
+        "monthlyFee": 9.99,
+        "yearlyFee": 100,
+        "yearlyAPY": {
+            "EUR": 3.71,
+            "GBP": 4.91,
+            "USD": 4.79
+        }
+    },
+    "metal": {
+        "name": "Metal",
+        "monthlyFee": 18.99,
+        "yearlyFee": 190,
+        "yearlyAPY": {
+            "EUR": 3.86,
+            "GBP": 5.16,
+            "USD": 5.04
+        }
+    },
+    "ultra": {
+        "name": "Ultra",
+        "monthlyFee": 60,
+        "yearlyFee": 600,
+        "yearlyAPY": {
+            "EUR": 3.96,
+            "GBP": 5.30,
+            "USD": 5.39
+        }
+    }
+}

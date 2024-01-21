@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Revolut APY</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="mb-4">Investment Table</h2>
+
+        <!-- Input for investment amount -->
+        <div class="mb-3">
+            <label for="investment-amount" class="form-label">Investment</label>
+            <input type="number" class="form-control" id="investment-amount" placeholder="Enter investment"
+                value="10000">
+        </div>
+
+        <!-- input/checkbox/switch to pay monthly or yearly -->
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="payment-switch">
+            <label class="form-check-label" for="payment-switch">Pay Monthly</label>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Subscription Plan</th>
+                    <th>Monthly Profit (EUR)</th>
+                    <th>Yearly Profit (EUR)</th>
+                    <th>Monthly Profit (GBP)</th>
+                    <th>Yearly Profit (GBP)</th>
+                    <th>Monthly Profit (USD)</th>
+                    <th>Yearly Profit (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be dynamically added using JavaScript -->
+            </tbody>
+        </table>
+
+        <!-- Advanced tab -->
+        <div class="accordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="advanced-heading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">
+                        Advanced
+                    </button>
+                </h2>
+                <div id="advanced-collapse" class="accordion-collapse collapse" aria-labelledby="advanced-heading">
+                    <div class="accordion-body">
+                        <!-- Advanced parts will be dynamically added using JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Get subscription plans from the API (data.json)
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    subscriptionPlans = data;
+
+                    // Get the container element where the advanced parts will be added
+                    const advancedContainer = document.getElementById("advanced-collapse").querySelector(".accordion-body");
+
+                    // Generate the HTML for the advanced parts based on the subscriptionPlans, you can change monthly, yearly fees and yearly APY's
+                    let advancedHTML = "";
+                    for (const [planKey, planValue] of Object.entries(subscriptionPlans)) {
+                        advancedHTML += `
+                    <div class="mb-3">
+                        <label for="${planKey}-monthly-fee" class="form-label mb-0">${planValue.name} Monthly Fee</label>    
+                        <input type="number" class="form-control" id="${planKey}-monthly-fee" placeholder="Enter monthly fee" value="${planValue.monthlyFee}">
+                        <label for="${planKey}-yearly-fee" class="form-label mb-0">${planValue.name} Yearly Fee</label>
+                        <input type="number" class="form-control" id="${planKey}-yearly-fee" placeholder="Enter yearly fee" value="${planValue.yearlyFee}">
+                        <label for="${planKey}-yearly-apy-eur" class="form-label mb-0">${planValue.name} Yearly APY EUR</label>
+                        <input type="number" class="form-control" id="${planKey}-yearly-apy-eur" placeholder="Enter yearly APY for EUR" value="${planValue.yearlyAPY.EUR}">
+                        <label for="${planKey}-yearly-apy-gbp" class="form-label mb-0">${planValue.name} Yearly APY GBP</label>
+                        <input type="number" class="form-control" id="${planKey}-yearly-apy-gbp" placeholder="Enter yearly APY for GBP" value="${planValue.yearlyAPY.GBP}">
+                        <label for="${planKey}-yearly-apy-usd" class="form-label mb-0">${planValue.name} Yearly APY USD</label>
+                        <input type="number" class="form-control" id="${planKey}-yearly-apy-usd" placeholder="Enter yearly APY for USD" value="${planValue.yearlyAPY.USD}">
+                    </div>
+                `;
+                    }
+
+                    // Listen for changes in the advanced parts, this should update the subscriptionPlans object with new values
+                    advancedContainer.addEventListener("input", function () {
+                        for (const [planKey, planValue] of Object.entries(subscriptionPlans)) {
+                            // Get the monthly fee input element
+                            const monthlyFeeInput = document.getElementById(`${planKey}-monthly-fee`);
+
+                            // Get the yearly fee input element
+                            const yearlyFeeInput = document.getElementById(`${planKey}-yearly-fee`);
+
+                            // Get the yearly APY input elements
+                            const yearlyAPYEURInput = document.getElementById(`${planKey}-yearly-apy-eur`);
+                            const yearlyAPYGBPInput = document.getElementById(`${planKey}-yearly-apy-gbp`);
+                            const yearlyAPYUSDInput = document.getElementById(`${planKey}-yearly-apy-usd`);
+
+                            // Update the subscriptionPlans object with new values
+                            subscriptionPlans[planKey].monthlyFee = parseFloat(monthlyFeeInput.value) || 0;
+                            subscriptionPlans[planKey].yearlyFee = parseFloat(yearlyFeeInput.value) || 0;
+                            subscriptionPlans[planKey].yearlyAPY.EUR = parseFloat(yearlyAPYEURInput.value) || 0;
+                            subscriptionPlans[planKey].yearlyAPY.GBP = parseFloat(yearlyAPYGBPInput.value) || 0;
+                            subscriptionPlans[planKey].yearlyAPY.USD = parseFloat(yearlyAPYUSDInput.value) || 0;
+                        }
+
+                        // Update the table with new data
+                        updateTable();
+                    });
+
+                    // Append the advanced HTML to the advanced container
+                    advancedContainer.innerHTML = advancedHTML;
+
+                    // Get the table body element
+                    const tableBody = document.querySelector('tbody');
+
+                    // Get the investment amount input element
+                    const investmentAmountInput = document.getElementById('investment-amount');
+
+                    // Function to calculate monthly and yearly profits
+                    function calculateProfits(investmentAmount, monthlyFee, yearlyFee, apy) {
+                        // Check if paid monthly or yearly
+                        const isMonthly = document.getElementById('payment-switch').checked;
+
+                        // Calculate monthly and yearly fees
+                        const monthlyFeeAmount = isMonthly ? monthlyFee : yearlyFee / 12;
+                        const yearlyFeeAmount = isMonthly ? monthlyFee * 12 : yearlyFee;
+
+                        // Calculate monthly and yearly profits
+                        const monthlyProfit = (investmentAmount * apy / 100 / 12) - monthlyFeeAmount;
+                        const yearlyProfit = (investmentAmount * apy / 100) - yearlyFeeAmount;
+
+                        return { monthlyProfit, yearlyProfit };
+                    }
+
+                    // Function to update the table with new data
+                    function updateTable() {
+                        tableBody.innerHTML = ''; // Clear existing rows
+
+                        // Check most profitable currency/subscription combo
+                        let mostProfitableCurrency = "";
+                        let mostProfitableSubscription = "";
+                        let mostProfitableMonthlyProfit = 0;
+                        let mostProfitableYearlyProfit = 0;
+
+                        // Loop through each subscription plan
+                        for (const [planKey, planValue] of Object.entries(subscriptionPlans)) {
+                            // Loop through each currency
+                            for (const currency of ['EUR', 'GBP', 'USD']) {
+                                const apy = planValue.yearlyAPY ? planValue.yearlyAPY[currency] : 0;
+                                const monthlyFee = planValue.monthlyFee;
+                                const yearlyFee = planValue.yearlyFee;
+
+                                const investmentAmount = parseFloat(investmentAmountInput.value) || 10000;
+
+                                const { monthlyProfit, yearlyProfit } = calculateProfits(investmentAmount, monthlyFee, yearlyFee, apy);
+
+                                // Check if this is the most profitable currency/subscription combo
+                                if (monthlyProfit > mostProfitableMonthlyProfit && yearlyProfit > mostProfitableYearlyProfit) {
+                                    mostProfitableCurrency = currency;
+                                    mostProfitableSubscription = planValue.name;
+                                    mostProfitableMonthlyProfit = monthlyProfit;
+                                    mostProfitableYearlyProfit = yearlyProfit;
+                                }
+                            }
+                        }
+
+                        // Loop through each subscription plan
+                        for (const [planKey, planValue] of Object.entries(subscriptionPlans)) {
+                            // Create a row for each subscription plan
+                            const row = document.createElement('tr');
+
+                            // Display the subscription plan name and monthly/yearly fees
+                            const isMonthly = document.getElementById('payment-switch').checked;
+                            row.innerHTML = `<td>${planValue.name} (${isMonthly ? planValue.monthlyFee : planValue.yearlyFee} ${isMonthly ? 'Monthly' : 'Yearly'})</td>`;
+
+                            // Loop through each currency
+                            for (const currency of ['EUR', 'GBP', 'USD']) {
+                                const apy = planValue.yearlyAPY ? planValue.yearlyAPY[currency] : 0;
+                                const monthlyFee = planValue.monthlyFee;
+                                const yearlyFee = planValue.yearlyFee;
+
+                                const investmentAmount = parseFloat(investmentAmountInput.value) || 10000;
+
+                                const { monthlyProfit, yearlyProfit } = calculateProfits(investmentAmount, monthlyFee, yearlyFee, apy);
+
+                                // Check if profit is positive or negative
+                                // If positive, check if this is the most profitable currency/subscription combo
+                                // If negative, check if this is the least profitable currency/subscription combo
+                                if (monthlyProfit > 0 && yearlyProfit > 0) {
+                                    if (currency === mostProfitableCurrency && planValue.name === mostProfitableSubscription) {
+                                        row.innerHTML += `
+                                    <td class="monthly-profit text-success">${monthlyProfit.toFixed(2)} (${apy}%)</td>
+                                    <td class="yearly-profit text-success">${yearlyProfit.toFixed(2)} (${apy}%)</td>
+                                `;
+                                    } else {
+                                        row.innerHTML += `
+                                    <td class="monthly-profit">${monthlyProfit.toFixed(2)} (${apy}%)</td>
+                                    <td class="yearly-profit">${yearlyProfit.toFixed(2)} (${apy}%)</td>
+                                `;
+                                    }
+                                } else {
+                                    const monthlyProfitClass = monthlyProfit > 0 ? "" : "text-danger";
+                                    const yearlyProfitClass = yearlyProfit > 0 ? "" : "text-danger";
+
+                                    row.innerHTML += `
+                                <td class="monthly-profit ${monthlyProfitClass}">${monthlyProfit.toFixed(2)} (${apy}%)</td>
+                                <td class="yearly-profit ${yearlyProfitClass}">${yearlyProfit.toFixed(2)} (${apy}%)</td>
+                            `;
+                                }
+                            }
+
+                            // Append the row to the table body
+                            tableBody.appendChild(row);
+                        }
+                    }
+
+                    // Initial table update
+                    updateTable();
+
+                    // Event listener for changes in input values or payment switch
+                    document.addEventListener('input', function () {
+                        updateTable();
+                    });
+                });
+        });
+    </script>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
